@@ -25,7 +25,10 @@ $(BUILD_DIR)/%.o: $(SRCS_DIR)/%.c Makefile
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -MF $(@:.o=.d) -o $@ -c $<
 
-$(NAME): $(OBJS)
+$(LIBFT_MALLOC):
+	make -C $(dir $@)
+
+$(NAME): $(LIBFT_MALLOC) $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(NAME) $(OBJS) $(LDLIBS)
 
 .PHONY: clean
