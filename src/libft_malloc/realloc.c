@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
@@ -83,20 +84,27 @@ void *realloc(void *ptr, size_t size)
 		return malloc(0);
 	}
 
+	pthread_mutex_lock(&memory_mutex);
 	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
-		return handleReallocErrors(reallocLarge(large, ptr, size));
+		ptr = handleReallocErrors(reallocLarge(large, ptr, size));
+		pthread_mutex_unlock(&memory_mutex);
+		return ptr;
 	}
 	zone_allocation_t zone_allocation;
 	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		return handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+		ptr = handleReallocErrors(reallocZoneAllocation(&zone_allocation,
 					TINY_MAX_SIZE, ptr, size));
+		pthread_mutex_unlock(&memory_mutex);
+		return ptr;
 	}
 	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		return handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+		ptr = handleReallocErrors(reallocZoneAllocation(&zone_allocation,
 					SMALL_MAX_SIZE, ptr, size));
+		pthread_mutex_unlock(&memory_mutex);
+		return ptr;
 	}
 	return NULL;
 }

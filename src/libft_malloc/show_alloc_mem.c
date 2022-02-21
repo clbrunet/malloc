@@ -60,10 +60,12 @@ static size_t show_larges(larges_list_t *larges)
 void show_alloc_mem()
 {
 	size_t total = 0;
+	pthread_mutex_lock(&memory_mutex);
 	total += show_zones(memory.tinys, "TINY", TINY_MAX_SIZE);
 	total += show_zones(memory.smalls, "SMALL", SMALL_MAX_SIZE);
 	total += show_larges(memory.larges);
 	printStr("Total : ");
 	printNbr(total);
 	printStr(" octets\n");
+	pthread_mutex_unlock(&memory_mutex);
 }
