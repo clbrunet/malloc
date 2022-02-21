@@ -5,6 +5,7 @@
 #include "libft_malloc/zones_list.h"
 #include "libft_malloc/memory.h"
 #include "libft_malloc/utils/math.h"
+#include "libft_malloc/utils/print.h"
 
 zones_list_t *zonesList(size_t allocation_max_size)
 {
@@ -50,7 +51,7 @@ zone_allocation_t zonesListSearchPtr(zones_list_t *zone, size_t allocation_max_s
 			&& ptr < zone->memory + (zone->allocations_count * allocation_max_size)) {
 			return (zone_allocation_t){
 				.zone = zone,
-				.index = (zone->memory - ptr) / allocation_max_size,
+				.index = (ptr - zone->memory) / allocation_max_size,
 			};
 		}
 		zone = zone->next;
