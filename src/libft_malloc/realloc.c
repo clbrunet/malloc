@@ -1,6 +1,4 @@
-#ifndef LIBFT_MALLOC_REALLOC_C
-#define LIBFT_MALLOC_REALLOC_C
-
+#include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
@@ -67,6 +65,14 @@ static void *reallocZoneAllocation(zone_allocation_t *zone_allocation, size_t al
 	return new;
 }
 
+static void *handleReallocErrors(void *ptr)
+{
+	if (ptr == NULL) {
+		errno = ENOMEM;
+	}
+	return ptr;
+}
+
 void *realloc(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
@@ -79,18 +85,18 @@ void *realloc(void *ptr, size_t size)
 
 	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
-		return reallocLarge(large, ptr, size);
+		return handleReallocErrors(reallocLarge(large, ptr, size));
 	}
 	zone_allocation_t zone_allocation;
 	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		return reallocZoneAllocation(&zone_allocation, TINY_MAX_SIZE, ptr, size);
+		return handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+					TINY_MAX_SIZE, ptr, size));
 	}
 	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		return reallocZoneAllocation(&zone_allocation, SMALL_MAX_SIZE, ptr, size);
+		return handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+					SMALL_MAX_SIZE, ptr, size));
 	}
 	return NULL;
 }
-
-#endif

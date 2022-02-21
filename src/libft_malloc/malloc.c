@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "libft_malloc/larges_list.h"
 #include "libft_malloc/utils/print.h"
@@ -73,6 +74,9 @@ void *malloc(size_t size)
 		ptr = getZoneAllocation(&memory.smalls, SMALL_MAX_SIZE, size);
 	} else {
 		ptr = getLargeAllocation(&memory.larges, size);
+	}
+	if (ptr == NULL) {
+		errno = ENOMEM;
 	}
 	return ptr;
 }
