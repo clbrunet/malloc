@@ -3,6 +3,26 @@
 #include "libft_malloc/memory.h"
 #include "libft_malloc/utils/print.h"
 
+static void showAllocationHexDump(unsigned char *allocation_address, size_t size)
+{
+	if (size == 0) {
+		return;
+	}
+
+	printHexMinimumLength(*allocation_address, 2);
+	allocation_address++;
+	for (size_t i = 1; i < size; i++) {
+		if (i % 32 == 0) {
+			printChar('\n');
+		} else if (i % 2 == 0) {
+			printChar(' ');
+		}
+		printHexMinimumLength(*allocation_address, 2);
+		allocation_address++;
+	}
+	printEndl();
+}
+
 static size_t showAllocation(long allocation_address, size_t size)
 {
 	printStr("Ox");
@@ -11,7 +31,8 @@ static size_t showAllocation(long allocation_address, size_t size)
 	printHex(allocation_address + size);
 	printStr(" : ");
 	printNbr(size);
-	printStr(" bytes\n");
+	printStr(" bytes :\n");
+	showAllocationHexDump((unsigned char *)allocation_address, size);
 	return size;
 }
 
@@ -54,7 +75,7 @@ static size_t showLarges(larges_list_t *larges)
 	return total;
 }
 
-void show_alloc_mem()
+void show_alloc_mem_ex()
 {
 	size_t total = 0;
 	pthread_mutex_lock(&memory_mutex);
