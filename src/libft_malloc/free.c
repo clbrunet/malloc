@@ -43,7 +43,11 @@ void freeImplementation(void *ptr)
 
 void free(void *ptr)
 {
-	pthread_mutex_lock(&memory_mutex);
+	if (pthread_mutex_lock(&memory_mutex) != 0) {
+		return;
+	}
 	freeImplementation(ptr);
-	pthread_mutex_unlock(&memory_mutex);
+	if (pthread_mutex_unlock(&memory_mutex) != 0) {
+		assert(!"pthread_mutex_unlock EPERM error");
+	}
 }

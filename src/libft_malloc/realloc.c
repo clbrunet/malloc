@@ -107,8 +107,12 @@ void *reallocImplementation(void *ptr, size_t size)
 
 void *realloc(void *ptr, size_t size)
 {
-	pthread_mutex_lock(&memory_mutex);
+	if (pthread_mutex_lock(&memory_mutex) != 0) {
+		return NULL;
+	}
 	ptr = reallocImplementation(ptr, size);
-	pthread_mutex_unlock(&memory_mutex);
+	if (pthread_mutex_unlock(&memory_mutex) != 0) {
+		assert(!"pthread_mutex_unlock EPERM error");
+	}
 	return ptr;
 }

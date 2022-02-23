@@ -91,7 +91,9 @@ static size_t showLarges(larges_list_t *larges)
 
 void show_alloc_mem_ex()
 {
-	pthread_mutex_lock(&memory_mutex);
+	if (pthread_mutex_lock(&memory_mutex) != 0) {
+		return;
+	}
 	showHistory(memory.history);
 	printEndl();
 	printEndl();
@@ -102,5 +104,7 @@ void show_alloc_mem_ex()
 	printStr("Total : ");
 	printNbr(total);
 	printStr(" bytes\n");
-	pthread_mutex_unlock(&memory_mutex);
+	if (pthread_mutex_unlock(&memory_mutex) != 0) {
+		assert(!"pthread_mutex_unlock EPERM error");
+	}
 }

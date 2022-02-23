@@ -56,7 +56,9 @@ static size_t showLarges(larges_list_t *larges)
 
 void show_alloc_mem()
 {
-	pthread_mutex_lock(&memory_mutex);
+	if (pthread_mutex_lock(&memory_mutex) != 0) {
+		return;
+	}
 	size_t total = 0;
 	total += showZones(memory.tinys, "TINY", TINY_MAX_SIZE);
 	total += showZones(memory.smalls, "SMALL", SMALL_MAX_SIZE);
@@ -64,5 +66,7 @@ void show_alloc_mem()
 	printStr("Total : ");
 	printNbr(total);
 	printStr(" bytes\n");
-	pthread_mutex_unlock(&memory_mutex);
+	if (pthread_mutex_unlock(&memory_mutex) != 0) {
+		assert(!"pthread_mutex_unlock EPERM error");
+	}
 }
