@@ -3,6 +3,6 @@
 
 #include <stddef.h>
 
-void *malloc(size_t size);
+void *mallocImplementation(size_t size);
 
 #endif

@@ -3,6 +3,20 @@
 #include "libft_malloc/memory.h"
 #include "libft_malloc/utils/print.h"
 
+static void showHistory(allocation_history_t *history)
+{
+	printStr("Allocation history :\n");
+	while (history != NULL) {
+		printNbr(history->size);
+		printStr(" bytes");
+		if (history->is_a_reallocation == true) {
+			printStr(" (reallocation)");
+		}
+		printStr("\n");
+		history = history->next;
+	}
+}
+
 static void showAllocationHexDump(unsigned char *allocation_address, size_t size)
 {
 	if (size == 0) {
@@ -77,8 +91,11 @@ static size_t showLarges(larges_list_t *larges)
 
 void show_alloc_mem_ex()
 {
-	size_t total = 0;
 	pthread_mutex_lock(&memory_mutex);
+	showHistory(memory.history);
+	printEndl();
+	printEndl();
+	size_t total = 0;
 	total += showZones(memory.tinys, "TINY", TINY_MAX_SIZE);
 	total += showZones(memory.smalls, "SMALL", SMALL_MAX_SIZE);
 	total += showLarges(memory.larges);

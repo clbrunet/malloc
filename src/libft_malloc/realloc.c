@@ -21,7 +21,7 @@ static void *reallocLarge(larges_list_t *large, void *ptr, size_t size)
 		return ptr;
 	}
 
-	void *new = malloc(size);
+	void *new = mallocImplementation(size);
 	if (new == NULL) {
 		return NULL;
 	}
@@ -50,7 +50,7 @@ static void *reallocZoneAllocation(zone_allocation_t *zone_allocation, size_t al
 		return ptr;
 	}
 
-	void *new = malloc(size);
+	void *new = mallocImplementation(size);
 	if (new == NULL) {
 		return NULL;
 	}
@@ -66,45 +66,49 @@ static void *reallocZoneAllocation(zone_allocation_t *zone_allocation, size_t al
 	return new;
 }
 
-static void *handleReallocErrors(void *ptr)
+static void *reallocReturn(void *ptr)
 {
 	if (ptr == NULL) {
 		errno = ENOMEM;
+		return NULL;
 	}
+	allocation_history_t *back = allocationHistoryGetBack(memory.history);
+	back->is_a_reallocation = true;
 	return ptr;
 }
 
-void *realloc(void *ptr, size_t size)
+void *reallocImplementation(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
-		return malloc(size);
+		return mallocImplementation(size);
 	}
 	if (size == 0) {
-		free(ptr);
-		return malloc(0);
+		freeImplementation(ptr);
+		return mallocImplementation(0);
 	}
 
-	pthread_mutex_lock(&memory_mutex);
 	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
-		ptr = handleReallocErrors(reallocLarge(large, ptr, size));
-		pthread_mutex_unlock(&memory_mutex);
-		return ptr;
+		return reallocReturn(reallocLarge(large, ptr, size));
 	}
 	zone_allocation_t zone_allocation;
 	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		ptr = handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+		return reallocReturn(reallocZoneAllocation(&zone_allocation,
 					TINY_MAX_SIZE, ptr, size));
-		pthread_mutex_unlock(&memory_mutex);
-		return ptr;
 	}
 	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
-		ptr = handleReallocErrors(reallocZoneAllocation(&zone_allocation,
+		return reallocReturn(reallocZoneAllocation(&zone_allocation,
 					SMALL_MAX_SIZE, ptr, size));
-		pthread_mutex_unlock(&memory_mutex);
-		return ptr;
 	}
 	return NULL;
+}
+
+void *realloc(void *ptr, size_t size)
+{
+	pthread_mutex_lock(&memory_mutex);
+	ptr = reallocImplementation(ptr, size);
+	pthread_mutex_unlock(&memory_mutex);
+	return ptr;
 }

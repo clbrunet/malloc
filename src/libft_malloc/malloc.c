@@ -3,16 +3,19 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "libft_malloc/allocation_history.h"
 #include "libft_malloc/larges_list.h"
 #include "libft_malloc/utils/print.h"
 #include "libft_malloc/memory.h"
 #include "libft_malloc/zones_list.h"
+#include "libft_malloc/free.h"
 
 memory_t memory = {
 	.malloc_memory = NULL,
 	.tinys = NULL,
 	.smalls = NULL,
 	.larges = NULL,
+	.history = NULL,
 };
 
 pthread_mutex_t memory_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -63,14 +66,13 @@ static void *getLargeAllocation(larges_list_t **larges, size_t size)
 	return (*larges)->memory;
 }
 
-void *malloc(size_t size)
+void *mallocImplementation(size_t size)
 {
 	if (size == 0) {
 		return NULL;
 	}
 
 	void *ptr = NULL;
-	pthread_mutex_lock(&memory_mutex);
 	if (size <= TINY_MAX_SIZE) {
 		ptr = getZoneAllocation(&memory.tinys, TINY_MAX_SIZE, size);
 	} else if (size <= SMALL_MAX_SIZE) {
@@ -78,9 +80,24 @@ void *malloc(size_t size)
 	} else {
 		ptr = getLargeAllocation(&memory.larges, size);
 	}
-	pthread_mutex_unlock(&memory_mutex);
 	if (ptr == NULL) {
 		errno = ENOMEM;
+		return NULL;
 	}
+	allocation_history_t *new = allocationHistory(size, false);
+	if (new == NULL) {
+		freeImplementation(ptr);
+		errno = ENOMEM;
+		return NULL;
+	}
+	allocationHistoryPushBack(&memory.history, new);
+	return ptr;
+}
+
+void *malloc(size_t size)
+{
+	pthread_mutex_lock(&memory_mutex);
+	void *ptr = mallocImplementation(size);
+	pthread_mutex_unlock(&memory_mutex);
 	return ptr;
 }

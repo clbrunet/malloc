@@ -4,6 +4,6 @@
 #include "libft_malloc/zones_list.h"
 
 void freeZoneAllocation(zone_allocation_t *zone_allocation);
-void free(void *ptr);
+void freeImplementation(void *ptr);
 
 #endif

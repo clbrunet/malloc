@@ -17,30 +17,33 @@ void freeZoneAllocation(zone_allocation_t *zone_allocation)
 	}
 }
 
-void free(void *ptr)
+void freeImplementation(void *ptr)
 {
 	if (ptr == NULL) {
 		return;
 	}
 
-	pthread_mutex_lock(&memory_mutex);
 	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
 		largesListUnsetMemory(large);
-		pthread_mutex_unlock(&memory_mutex);
 		return;
 	}
 	zone_allocation_t zone_allocation;
 	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
 		freeZoneAllocation(&zone_allocation);
-		pthread_mutex_unlock(&memory_mutex);
 		return;
 	}
 	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
 	if (zone_allocation.zone != NULL) {
 		freeZoneAllocation(&zone_allocation);
-		pthread_mutex_unlock(&memory_mutex);
 		return;
 	}
+}
+
+void free(void *ptr)
+{
+	pthread_mutex_lock(&memory_mutex);
+	freeImplementation(ptr);
+	pthread_mutex_unlock(&memory_mutex);
 }

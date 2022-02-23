@@ -56,8 +56,8 @@ static size_t showLarges(larges_list_t *larges)
 
 void show_alloc_mem()
 {
-	size_t total = 0;
 	pthread_mutex_lock(&memory_mutex);
+	size_t total = 0;
 	total += showZones(memory.tinys, "TINY", TINY_MAX_SIZE);
 	total += showZones(memory.smalls, "SMALL", SMALL_MAX_SIZE);
 	total += showLarges(memory.larges);
