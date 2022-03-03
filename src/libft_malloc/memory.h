@@ -3,21 +3,19 @@
 
 #include <pthread.h>
 
-#include "libft_malloc/malloc_memory_list.h"
-#include "libft_malloc/zones_list.h"
-#include "libft_malloc/larges_list.h"
-#include "libft_malloc/allocation_history.h"
+#include "libft_malloc/zones.h"
+#include "libft_malloc/larges.h"
+#include "libft_malloc/allocation_histories.h"
 
 #define TINY_MAX_SIZE 256
 #define SMALL_MAX_SIZE 4096
 
 typedef struct memory_s
 {
-	malloc_memory_list_t *malloc_memory;
-	zones_list_t *tinys;
-	zones_list_t *smalls;
-	larges_list_t *larges;
-	allocation_history_t *history;
+	zones_t *tinys;
+	zones_t *smalls;
+	larges_t *larges;
+	allocation_histories_t *histories;
 }	memory_t;
 
 extern memory_t memory;

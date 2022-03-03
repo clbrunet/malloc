@@ -6,7 +6,6 @@ size_t getStringLength(const char *str)
 	assert(str != NULL);
 
 	const char *iter = str;
-
 	while (*iter != '\0') {
 		iter++;
 	}

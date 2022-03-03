@@ -1,54 +1,54 @@
 #include <assert.h>
 
 #include "libft_malloc/memory.h"
+#include "libft_malloc/block.h"
 #include "libft_malloc/utils/print.h"
 
 static size_t showAllocation(long allocation_address, size_t size)
 {
-	printStr("Ox");
-	printHex(allocation_address);
-	printStr(" - Ox");
-	printHex(allocation_address + size);
+	assert(allocation_address != 0);
+	assert(size != 0);
+
+	printHex(allocation_address, true);
+	printStr(" - ");
+	printHex(allocation_address + size, true);
 	printStr(" : ");
 	printNbr(size);
 	printStr(" bytes\n");
 	return size;
 }
 
-static size_t showZones(zones_list_t *zones, const char *name, size_t allocation_max_size)
+static size_t showZones(zones_t *zones, const char *name)
 {
 	assert(name != NULL);
-	assert(allocation_max_size != 0);
 
 	size_t total = 0;
 	while (zones != NULL) {
-		long address = (long)zones->memory;
 		printStr(name);
-		printStr(" : Ox");
-		printHex(address);
+		printStr(" : ");
+		printHex((long long)zones, true);
 		printEndl();
-		for (size_t i = 0; i < zones->allocations_count; i++) {
-			if (zones->sizes[i] != 0) {
-				total += showAllocation(address, zones->sizes[i]);
+		block_t *block = ZONE_START(zones);
+		void *zone_end = ZONE_END(zones);
+		while ((void *)block < zone_end) {
+			if (block->is_free == false) {
+				total += showAllocation((long)BLOCK_START(block), block->size);
 			}
-			address += allocation_max_size;
+			block = BLOCK_NEXT(block);
 		}
 		zones = zones->next;
 	}
 	return total;
 }
 
-static size_t showLarges(larges_list_t *larges)
+static size_t showLarges(larges_t *larges)
 {
 	size_t total = 0;
 	while (larges != NULL) {
-		if (larges->memory != NULL) {
-			long address = (long)larges->memory;
-			printStr("LARGE : Ox");
-			printHex(address);
-			printEndl();
-			total += showAllocation(address, larges->size);
-		}
+		printStr("LARGE : ");
+		printHex((long long)larges, true);
+		printEndl();
+		total += showAllocation((long)LARGE_START(larges), larges->size);
 		larges = larges->next;
 	}
 	return total;
@@ -60,8 +60,8 @@ void show_alloc_mem()
 		return;
 	}
 	size_t total = 0;
-	total += showZones(memory.tinys, "TINY", TINY_MAX_SIZE);
-	total += showZones(memory.smalls, "SMALL", SMALL_MAX_SIZE);
+	total += showZones(memory.tinys, "TINY");
+	total += showZones(memory.smalls, "SMALL");
 	total += showLarges(memory.larges);
 	printStr("Total : ");
 	printNbr(total);

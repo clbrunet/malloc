@@ -3,17 +3,25 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include "libft_malloc/free.h"
+#include "libft_malloc/block.h"
+#include "libft_malloc/larges.h"
 #include "libft_malloc/memory.h"
 #include "libft_malloc/utils/print.h"
+#include "libft_malloc/zones.h"
 
-void freeZoneAllocation(zone_allocation_t *zone_allocation)
+static void freeZoneAllocation(zones_t **zones, zones_t *zone, void *ptr)
 {
-	assert(zone_allocation != NULL
-			&& zone_allocation->zone != NULL
-			&& zone_allocation->index != (size_t)-1);
-	zone_allocation->zone->sizes[zone_allocation->index] = 0;
-	if (zone_allocation->index < zone_allocation->zone->min_free_allocation_index) {
-		zone_allocation->zone->min_free_allocation_index = zone_allocation->index;
+	assert(zone != NULL);
+	assert(ptr != NULL);
+
+	block_t *block = blocksSearchPtr(zone, ptr);
+	if (block == NULL) {
+		return;
+	}
+	freeBlock(zone, block);
+	if (zone->block_used_count == 0) {
+		zonesDelete(zones, zone);
 	}
 }
 
@@ -23,20 +31,20 @@ void freeImplementation(void *ptr)
 		return;
 	}
 
-	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
+	larges_t *large = largesSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
-		largesListUnsetMemory(large);
+		largesDelete(&memory.larges, large);
 		return;
 	}
-	zone_allocation_t zone_allocation;
-	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
-	if (zone_allocation.zone != NULL) {
-		freeZoneAllocation(&zone_allocation);
+	zones_t *zone;
+	zone = zonesSearchPtr(memory.tinys, ptr);
+	if (zone != NULL) {
+		freeZoneAllocation(&memory.tinys, zone, ptr);
 		return;
 	}
-	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
-	if (zone_allocation.zone != NULL) {
-		freeZoneAllocation(&zone_allocation);
+	zone = zonesSearchPtr(memory.smalls, ptr);
+	if (zone != NULL) {
+		freeZoneAllocation(&memory.smalls, zone, ptr);
 		return;
 	}
 }

@@ -27,7 +27,7 @@ $(BUILD_DIR)/%.o: $(SRCS_DIR)/%.c Makefile
 	$(CC) $(CFLAGS) -MMD -MP -MF $(@:.o=.d) -o $@ -c $<
 
 $(NAME_HOSTTYPE): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $(NAME_HOSTTYPE) $(OBJS) $(LDLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -o $(NAME_HOSTTYPE) $(OBJS)
 
 $(NAME): $(NAME_HOSTTYPE)
 	ln -sf $(NAME_HOSTTYPE) $(NAME)

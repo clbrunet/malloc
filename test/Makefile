@@ -10,7 +10,8 @@ CFLAGS += -I../include/ -I./src/
 CFLAGS += -g3
 # CFLAGS += -DNDEBUG
 LDFLAGS := -L../
-LDLIBS := -lft_malloc -lpthread
+LDLIBS := -lpthread
+LDLIBS += -lft_malloc
 
 SRCS := $(shell find $(SRCS_DIR) -type f -name "*.c")
 OBJS := $(SRCS:$(SRCS_DIR)/%.c=$(BUILD_DIR)/%.o)

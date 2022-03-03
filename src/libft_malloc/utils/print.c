@@ -1,7 +1,9 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <limits.h>
 
+#include "libft_malloc/utils/print.h"
 #include "libft_malloc/utils/string.h"
 
 void printChar(char c)
@@ -40,14 +42,14 @@ void printNbr(long long nbr)
 	printChar(u_nbr % 10 + '0');
 }
 
-void printHex(long long hex)
+void printHex(long long hex, bool should_prefix)
 {
 	unsigned long long u_hex;
 	if (hex == LLONG_MIN) {
-		write(1, "-", 1);
+		printChar('-');
 		u_hex = (unsigned long long)LLONG_MAX + 1;
 	} else if (hex < 0) {
-		write(1, "-", 1);
+		printChar('-');
 		u_hex = -hex;
 	} else {
 		u_hex = hex;
@@ -56,34 +58,46 @@ void printHex(long long hex)
 	const char *chars = "0123456789ABCDEF";
 
 	if (u_hex >= 16) {
-		printHex(u_hex / 16);
+		printHex(u_hex / 16, should_prefix);
+	} else {
+		if (should_prefix == true) {
+			printStr("0x");
+		}
 	}
 	printChar(chars[u_hex % 16]);
 }
 
-void printHexMinimumLength(long long hex, size_t minimum_length)
+void printHexMinimumLength(long long hex, size_t minimum_length, bool should_prefix)
 {
-	if (minimum_length <= 1) {
-		return printHex(hex);
-	}
-
+	size_t length = 1;
 	unsigned long long u_hex;
-	if (hex == LLONG_MIN) {
-		u_hex = (unsigned long long)LLONG_MAX + 1;
-	} else if (hex < 0) {
-		u_hex = -hex;
+	if (hex < 0) {
+		printChar('-');
+		length++;
+		if (hex == LLONG_MIN) {
+			u_hex = (unsigned long long)LLONG_MAX + 1;
+		} else {
+			u_hex = -hex;
+		}
 	} else {
 		u_hex = hex;
 	}
 
-	while (minimum_length > 0 && u_hex >= 16) {
+	if (length >= minimum_length) {
+		return printHex(u_hex, should_prefix);
+	}
+
+	unsigned long long u_hex_backup = u_hex;
+	while (u_hex >= 16) {
 		u_hex /= 16;
-		minimum_length--;
+		length++;
 	}
-	minimum_length--;
-	while (minimum_length > 0) {
+	if (should_prefix == true) {
+		printStr("0x");
+	}
+	while (length < minimum_length) {
 		printChar('0');
-		minimum_length--;
+		length++;
 	}
-	printHex(hex);
+	printHex(u_hex_backup, false);
 }

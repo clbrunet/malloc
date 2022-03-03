@@ -4,103 +4,124 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#include "libft_malloc/larges_list.h"
+#include "libft_malloc/larges.h"
 #include "libft_malloc/malloc.h"
 #include "libft_malloc/free.h"
 #include "libft_malloc/memory.h"
+#include "libft_malloc/block.h"
+#include "libft_malloc/utils/math.h"
 #include "libft_malloc/utils/string.h"
+#include "libft_malloc/zones.h"
 
-static void *reallocLarge(larges_list_t *large, void *ptr, size_t size)
+static void *reallocLarge(larges_t *large, void *ptr, size_t size)
 {
 	assert(large != NULL);
 	assert(ptr != NULL);
 	assert(size != 0);
 
-	if (size <= large->max_size) {
-		large->size = size;
+	if (size <= large->size) {
 		return ptr;
 	}
 
-	void *new = mallocImplementation(size);
+	void *new = mallocImplementation(size, DontAddHistoryEntry);
 	if (new == NULL) {
 		return NULL;
 	}
-	size_t min;
-	if (size < large->size) {
-		min = size;
-	} else {
-		min = large->size;
-	}
-	memoryCopy(new, ptr, min);
-	largesListUnsetMemory(large);
+	memoryCopy(new, ptr, min(size, large->size));
+	largesDelete(&memory.larges, large);
 	return new;
 }
 
-static void *reallocZoneAllocation(zone_allocation_t *zone_allocation, size_t allocation_max_size,
-		void *ptr, size_t size)
+static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, size_t size)
 {
-	assert(zone_allocation != NULL
-			&& zone_allocation->zone != NULL
-			&& zone_allocation->index != (size_t)-1);
+	assert(zone != NULL);
 	assert(ptr != NULL);
 	assert(size != 0);
 
-	if (size <= allocation_max_size) {
-		zone_allocation->zone->sizes[zone_allocation->index] = size;
-		return ptr;
-	}
-
-	void *new = mallocImplementation(size);
-	if (new == NULL) {
+	block_t *block = blocksSearchPtr(zone, ptr);
+	if (block == NULL) {
 		return NULL;
 	}
-	size_t old_size = zone_allocation->zone->sizes[zone_allocation->index];
-	size_t min;
-	if (size < old_size) {
-		min = size;
-	} else {
-		min = old_size;
+
+	if (size == block->size) {
+		return ptr;
 	}
-	memoryCopy(new, ptr, min);
-	freeZoneAllocation(zone_allocation);
-	return new;
+	if (size > block->size) {
+		void *new = mallocImplementation(size, DontAddHistoryEntry);
+		if (new == NULL) {
+			return NULL;
+		}
+		memoryCopy(new, ptr, min(size, block->size));
+		freeBlock(zone, block);
+		if (zone->block_used_count == 0) {
+			zonesDelete(zones, zone);
+		}
+		return new;
+	}
+	size_t unused = block->size - size;
+	block_t *next = BLOCK_NEXT(block);
+	bool is_next_in_zone = isPtrInZone(zone, next);
+	if (unused <= sizeof(block_t)
+		&& (is_next_in_zone == false || next->is_free == false)) {
+		// Too little space left to create a new block
+		return ptr;
+	}
+	// There is enough space in block or in next to create a new block
+	block->size = size;
+	block_t *new = BLOCK_NEXT(block);
+	new->prev = block;
+	new->is_free = true;
+	if (is_next_in_zone == false || next->is_free == false) {
+		// There isn't enough space in next to create a new block but there is in block
+		new->size = unused - sizeof(block_t);
+		if (is_next_in_zone == true) {
+			next->prev = new;
+		}
+		return ptr;
+	}
+	// There is enough space in next to create a new block
+	size_t next_size = next->size;
+	new->size = unused - sizeof(block_t) + sizeof(block_t) + next_size;
+	block_t *next_next = BLOCK_NEXT(next);
+	if (isPtrInZone(zone, next_next)) {
+		next_next->prev = new;
+	}
+	return ptr;
 }
 
-static void *reallocReturn(void *ptr)
+static void *reallocReturn(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	allocation_history_t *back = allocationHistoryGetBack(memory.history);
-	back->is_a_reallocation = true;
+	allocationHistoriesAddEntry(&memory.histories,
+			(allocation_histories_entry_t){ .size = size, .is_a_reallocation = true });
 	return ptr;
 }
 
 void *reallocImplementation(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
-		return mallocImplementation(size);
+		return mallocImplementation(size, AddHistoryEntry);
 	}
 	if (size == 0) {
 		freeImplementation(ptr);
-		return mallocImplementation(0);
+		return mallocImplementation(0, AddHistoryEntry);
 	}
 
-	larges_list_t *large = largesListSearchPtr(memory.larges, ptr);
+	larges_t *large = largesSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
-		return reallocReturn(reallocLarge(large, ptr, size));
+		return reallocReturn(reallocLarge(large, ptr, size), size);
 	}
-	zone_allocation_t zone_allocation;
-	zone_allocation = zonesListSearchPtr(memory.tinys, TINY_MAX_SIZE, ptr);
-	if (zone_allocation.zone != NULL) {
-		return reallocReturn(reallocZoneAllocation(&zone_allocation,
-					TINY_MAX_SIZE, ptr, size));
+	zones_t *zone;
+	zone = zonesSearchPtr(memory.tinys, ptr);
+	if (zone != NULL) {
+		return reallocReturn(reallocZoneAllocation(&memory.tinys, zone, ptr, size), size);
 	}
-	zone_allocation = zonesListSearchPtr(memory.smalls, SMALL_MAX_SIZE, ptr);
-	if (zone_allocation.zone != NULL) {
-		return reallocReturn(reallocZoneAllocation(&zone_allocation,
-					SMALL_MAX_SIZE, ptr, size));
+	zone = zonesSearchPtr(memory.smalls, ptr);
+	if (zone != NULL) {
+		return reallocReturn(reallocZoneAllocation(&memory.smalls, zone, ptr, size), size);
 	}
 	return NULL;
 }

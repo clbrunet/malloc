@@ -3,71 +3,69 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "libft_malloc/allocation_history.h"
-#include "libft_malloc/larges_list.h"
-#include "libft_malloc/utils/print.h"
 #include "libft_malloc/memory.h"
-#include "libft_malloc/zones_list.h"
+#include "libft_malloc/allocation_histories.h"
+#include "libft_malloc/larges.h"
+#include "libft_malloc/utils/print.h"
+#include "libft_malloc/zones.h"
+#include "libft_malloc/block.h"
 #include "libft_malloc/free.h"
 
 memory_t memory = {
-	.malloc_memory = NULL,
 	.tinys = NULL,
 	.smalls = NULL,
 	.larges = NULL,
-	.history = NULL,
+	.histories = NULL,
 };
 
 pthread_mutex_t memory_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void *getZoneAllocation(zones_list_t **zones, size_t allocation_max_size, size_t size)
+static void *getZoneAllocation(zones_t **zones, size_t allocation_max_size, size_t size)
 {
 	assert(zones != NULL);
 	assert(allocation_max_size != 0);
 	assert(size != 0);
 
-	while (*zones != NULL && (*zones)->min_free_allocation_index >= (*zones)->allocations_count) {
+	while (*zones != NULL) {
+		block_t *block = (*zones)->leftmost_free_block;
+		void *zone_end = ZONE_END(*zones);
+		while ((void *)block < zone_end) {
+			if (block->is_free == true && block->size >= size) {
+				void *ptr = allocateFreeBlock(*zones, block, size);
+				return ptr;
+			}
+			block = BLOCK_NEXT(block);
+		}
 		zones = &(*zones)->next;
 	}
+
+	*zones = zonesCreate(allocation_max_size);
 	if (*zones == NULL) {
-		*zones = zonesList(allocation_max_size);
-		if (*zones == NULL) {
-			return NULL;
-		}
+		return NULL;
 	}
-	zones_list_t *zone = *zones;
-	while (zone->sizes[zone->min_free_allocation_index] != 0) {
-		zone->min_free_allocation_index++;
-		assert(zone->min_free_allocation_index < zone->allocations_count);
-	}
-	zone->sizes[zone->min_free_allocation_index] = size;
-	zone->min_free_allocation_index++;
-	return zone->memory + ((zone->min_free_allocation_index - 1) * allocation_max_size);
+	void *ptr = allocateFreeBlock(*zones, (*zones)->leftmost_free_block, size);
+	return ptr;
 }
 
-static void *getLargeAllocation(larges_list_t **larges, size_t size)
+static void *getLargeAllocation(larges_t **larges, size_t size)
 {
 	assert(larges != NULL);
 	assert(size != 0);
 
-	while (*larges != NULL && (*larges)->memory != NULL) {
+	while (*larges != NULL) {
 		larges = &(*larges)->next;
 	}
-	if (*larges != NULL) {
-		if (largesListSetMemory(*larges, size) == -1) {
-			return NULL;
-		}
-	} else {
-		*larges = largesList(size);
-		if (*larges == NULL) {
-			return NULL;
-		}
+	*larges = largesCreate(size);
+	if (*larges == NULL) {
+		return NULL;
 	}
-	return (*larges)->memory;
+	return LARGE_START(*larges);
 }
 
-void *mallocImplementation(size_t size)
+void *mallocImplementation(size_t size, allocation_history_action_t allocation_history_action)
 {
+	assert(isAllocationHistoryActionValid(allocation_history_action) == true);
+
 	if (size == 0) {
 		return NULL;
 	}
@@ -84,13 +82,10 @@ void *mallocImplementation(size_t size)
 		errno = ENOMEM;
 		return NULL;
 	}
-	allocation_history_t *new = allocationHistory(size, false);
-	if (new == NULL) {
-		freeImplementation(ptr);
-		errno = ENOMEM;
-		return NULL;
+	if (allocation_history_action == AddHistoryEntry) {
+		allocationHistoriesAddEntry(&memory.histories,
+				(allocation_histories_entry_t){ .size = size, .is_a_reallocation = false });
 	}
-	allocationHistoryPushBack(&memory.history, new);
 	return ptr;
 }
 
@@ -99,7 +94,7 @@ void *malloc(size_t size)
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return NULL;
 	}
-	void *ptr = mallocImplementation(size);
+	void *ptr = mallocImplementation(size, AddHistoryEntry);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");
 	}
