@@ -18,34 +18,13 @@ void *routine()
 	show_alloc_mem();
 	free(p);
 	free(p2);
-	write(1, "freed\n", 6);
 	return NULL;
 }
 
 int main(int argc, char **argv)
 {
+	write(STDIN_FILENO, "go\n", 3);
 	if (argc == 1) {
-		void *p1 = malloc(20);
-		show_alloc_mem();
-		void *p2 = malloc(20);
-		show_alloc_mem();
-		void *p3 = malloc(20);
-		show_alloc_mem();
-		void *p4 = malloc(20);
-		show_alloc_mem();
-		free(p1);
-		show_alloc_mem();
-		free(p2);
-		show_alloc_mem();
-		free(p3);
-		show_alloc_mem();
-		free(p4);
-		show_alloc_mem();
-		write(1, "\n\n", 2);
-		void *p5 = malloc(20);
-		show_alloc_mem();
-		free(p5);
-		return 0;
 		pthread_t thread[THREAD_NUMBER];
 		for (size_t i = 0; i < THREAD_NUMBER; i++) {
     		pthread_create(&thread[i], NULL, &routine, NULL);
@@ -53,6 +32,7 @@ int main(int argc, char **argv)
 		for (size_t i = 0; i < THREAD_NUMBER; i++) {
     		pthread_join(thread[i], NULL);
 		}
+		show_alloc_mem_ex();
 		return 0;
 	}
 	if (argv[1][0] == '0') {
