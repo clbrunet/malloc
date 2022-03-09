@@ -37,9 +37,9 @@ void freeImplementation(void *ptr)
 		return;
 	}
 	zones_t *zone;
-	zone = zonesSearchPtr(memory.tinys, ptr);
+	zone = zonesSearchPtr(memory.tinies, ptr);
 	if (zone != NULL) {
-		freeZoneAllocation(&memory.tinys, zone, ptr);
+		freeZoneAllocation(&memory.tinies, zone, ptr);
 		return;
 	}
 	zone = zonesSearchPtr(memory.smalls, ptr);

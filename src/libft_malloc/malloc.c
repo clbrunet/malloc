@@ -12,7 +12,7 @@
 #include "libft_malloc/free.h"
 
 memory_t memory = {
-	.tinys = NULL,
+	.tinies = NULL,
 	.smalls = NULL,
 	.larges = NULL,
 	.histories = NULL,
@@ -72,7 +72,7 @@ void *mallocImplementation(size_t size, allocation_history_action_t allocation_h
 
 	void *ptr = NULL;
 	if (size <= TINY_MAX_SIZE) {
-		ptr = getZoneAllocation(&memory.tinys, TINY_MAX_SIZE, size);
+		ptr = getZoneAllocation(&memory.tinies, TINY_MAX_SIZE, size);
 	} else if (size <= SMALL_MAX_SIZE) {
 		ptr = getZoneAllocation(&memory.smalls, SMALL_MAX_SIZE, size);
 	} else {

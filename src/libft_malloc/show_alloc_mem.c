@@ -60,7 +60,7 @@ void show_alloc_mem()
 		return;
 	}
 	size_t total = 0;
-	total += showZones(memory.tinys, "TINY");
+	total += showZones(memory.tinies, "TINY");
 	total += showZones(memory.smalls, "SMALL");
 	total += showLarges(memory.larges);
 	printStr("Total : ");

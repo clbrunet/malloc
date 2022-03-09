@@ -115,9 +115,9 @@ void *reallocImplementation(void *ptr, size_t size)
 		return reallocReturn(reallocLarge(large, ptr, size), size);
 	}
 	zones_t *zone;
-	zone = zonesSearchPtr(memory.tinys, ptr);
+	zone = zonesSearchPtr(memory.tinies, ptr);
 	if (zone != NULL) {
-		return reallocReturn(reallocZoneAllocation(&memory.tinys, zone, ptr, size), size);
+		return reallocReturn(reallocZoneAllocation(&memory.tinies, zone, ptr, size), size);
 	}
 	zone = zonesSearchPtr(memory.smalls, ptr);
 	if (zone != NULL) {

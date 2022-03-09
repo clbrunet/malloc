@@ -16,6 +16,7 @@ void *routine()
 		p[i] = i;
 	}
 	show_alloc_mem();
+	show_alloc_stats();
 	free(p);
 	free(p2);
 	return NULL;
@@ -40,6 +41,7 @@ int main(int argc, char **argv)
 		for (size_t i = 0; i < 1024; i++) {
 			malloc(1024);
 		}
+		show_alloc_stats();
 	}
 	return 0;
 }

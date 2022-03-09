@@ -12,7 +12,7 @@
 
 typedef struct memory_s
 {
-	zones_t *tinys;
+	zones_t *tinies;
 	zones_t *smalls;
 	larges_t *larges;
 	allocation_histories_t *histories;

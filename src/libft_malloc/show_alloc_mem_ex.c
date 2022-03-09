@@ -109,7 +109,7 @@ static void showCurrentAllocations()
 {
 	size_t total = 0;
 	printStr(FG_CYAN "Current allocations :\n" RESET);
-	total += showZones(memory.tinys, "TINY");
+	total += showZones(memory.tinies, "TINY");
 	total += showZones(memory.smalls, "SMALL");
 	total += showLarges(memory.larges);
 	printStr(FG_BLUE "Total : ");
