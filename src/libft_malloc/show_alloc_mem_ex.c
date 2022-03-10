@@ -4,7 +4,7 @@
 #include "libft_malloc/block.h"
 #include "libft_malloc/utils/print.h"
 
-static void showHistory(allocation_histories_t *histories)
+static void showHistory(const allocation_histories_t *histories)
 {
 	printStr(FG_YELLOW "Allocation history :\n" RESET);
 	if (histories == NULL) {
@@ -25,7 +25,7 @@ static void showHistory(allocation_histories_t *histories)
 	}
 }
 
-static void showAllocationHexDump(unsigned char *allocation_address, size_t size)
+static void showAllocationHexDump(const unsigned char *allocation_address, size_t size)
 {
 	assert(allocation_address != NULL);
 	assert(size != 0);
@@ -69,7 +69,7 @@ static size_t showAllocation(long allocation_address, size_t size)
 	return size;
 }
 
-static size_t showZones(zones_t *zones, const char *name)
+static size_t showZones(const zones_t *zones, const char *name)
 {
 	assert(name != NULL);
 
@@ -92,7 +92,7 @@ static size_t showZones(zones_t *zones, const char *name)
 	return total;
 }
 
-static size_t showLarges(larges_t *larges)
+static size_t showLarges(const larges_t *larges)
 {
 	size_t total = 0;
 	while (larges != NULL) {
