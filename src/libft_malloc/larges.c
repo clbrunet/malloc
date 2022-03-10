@@ -4,6 +4,7 @@
 
 #include "libft_malloc/larges.h"
 #include "libft_malloc/utils/math.h"
+#include "libft_malloc/utils/print.h"
 
 larges_t *largesCreate(size_t size)
 {
@@ -54,4 +55,21 @@ void largesDelete(larges_t **larges, larges_t *to_delete)
 		}
 		large = large->next;
 	}
+}
+
+void showLarges(larges_t *larges)
+{
+	printStr("Larges : ");
+	if (larges == NULL) {
+		printStr("nothing\n");
+		return;
+	}
+	printNbr(larges->size);
+	larges = larges->next;
+	while (larges != NULL) {
+		printStr(" -> ");
+		printNbr(larges->size);
+		larges = larges->next;
+	}
+	printEndl();
 }

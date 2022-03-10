@@ -15,5 +15,6 @@ struct larges_s
 larges_t *largesCreate(size_t size);
 larges_t *largesSearchPtr(larges_t *larges, void *ptr);
 void largesDelete(larges_t **larges, larges_t *to_delete);
+void showLarges(larges_t *larges);
 
 #endif

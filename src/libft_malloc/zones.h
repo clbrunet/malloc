@@ -22,5 +22,6 @@ zones_t *zonesCreate(size_t allocation_max_size);
 bool isPtrInZone(const zones_t *zone, const void *ptr);
 zones_t *zonesSearchPtr( zones_t *zones, const void *ptr);
 void zonesDelete(zones_t **zones, zones_t *to_delete);
+void showZones(zones_t *zones, const char *name);
 
 #endif

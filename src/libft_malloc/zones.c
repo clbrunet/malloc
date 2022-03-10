@@ -74,3 +74,32 @@ void zonesDelete(zones_t **zones, zones_t *to_delete)
 		zone = zone->next;
 	}
 }
+
+void showZones(zones_t *zones, const char *name)
+{
+	assert(name != NULL);
+
+	while (zones != NULL) {
+		printStr(name);
+		printStr(" :");
+
+		block_t *block = ZONE_START(zones);
+		void *zone_end = ZONE_END(zones);
+		while ((void *)block < zone_end) {
+			printStr(" { ");
+			printNbr(block->size);
+			if (block->is_free == true) {
+				printStr(" free bytes");
+			} else {
+				printStr(" used bytes");
+			}
+			if (zones->leftmost_free_block == block) {
+				printStr(" (leftmost free block)");
+			}
+			printStr(" }");
+			block = BLOCK_NEXT(block);
+		}
+		printEndl();
+		zones = zones->next;
+	}
+}

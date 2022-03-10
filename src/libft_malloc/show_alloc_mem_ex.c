@@ -4,7 +4,7 @@
 #include "libft_malloc/block.h"
 #include "libft_malloc/utils/print.h"
 
-static void showHistory(const allocation_histories_t *histories)
+static void showAllocationHistory(const allocation_histories_t *histories)
 {
 	printStr(FG_YELLOW "Allocation history :\n" RESET);
 	if (histories == NULL) {
@@ -69,7 +69,7 @@ static size_t showAllocation(long allocation_address, size_t size)
 	return size;
 }
 
-static size_t showZones(const zones_t *zones, const char *name)
+static size_t showZonesAllocations(const zones_t *zones, const char *name)
 {
 	assert(name != NULL);
 
@@ -92,7 +92,7 @@ static size_t showZones(const zones_t *zones, const char *name)
 	return total;
 }
 
-static size_t showLarges(const larges_t *larges)
+static size_t showLargesAllocations(const larges_t *larges)
 {
 	size_t total = 0;
 	while (larges != NULL) {
@@ -109,9 +109,9 @@ static void showCurrentAllocations()
 {
 	size_t total = 0;
 	printStr(FG_CYAN "Current allocations :\n" RESET);
-	total += showZones(memory.tinies, "TINY");
-	total += showZones(memory.smalls, "SMALL");
-	total += showLarges(memory.larges);
+	total += showZonesAllocations(memory.tinies, "TINY");
+	total += showZonesAllocations(memory.smalls, "SMALL");
+	total += showLargesAllocations(memory.larges);
 	printStr(FG_BLUE "Total : ");
 	printNbr(total);
 	printStr(" bytes\n" RESET);
@@ -122,7 +122,7 @@ void show_alloc_mem_ex()
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return;
 	}
-	showHistory(memory.histories);
+	showAllocationHistory(memory.histories);
 	printEndl();
 	showCurrentAllocations();
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {

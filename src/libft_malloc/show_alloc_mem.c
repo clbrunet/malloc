@@ -18,7 +18,7 @@ static size_t showAllocation(long allocation_address, size_t size)
 	return size;
 }
 
-static size_t showZones(const zones_t *zones, const char *name)
+static size_t showZonesAllocations(const zones_t *zones, const char *name)
 {
 	assert(name != NULL);
 
@@ -41,7 +41,7 @@ static size_t showZones(const zones_t *zones, const char *name)
 	return total;
 }
 
-static size_t showLarges(const larges_t *larges)
+static size_t showLargesAllocations(const larges_t *larges)
 {
 	size_t total = 0;
 	while (larges != NULL) {
@@ -60,9 +60,9 @@ void show_alloc_mem()
 		return;
 	}
 	size_t total = 0;
-	total += showZones(memory.tinies, "TINY");
-	total += showZones(memory.smalls, "SMALL");
-	total += showLarges(memory.larges);
+	total += showZonesAllocations(memory.tinies, "TINY");
+	total += showZonesAllocations(memory.smalls, "SMALL");
+	total += showLargesAllocations(memory.larges);
 	printStr("Total : ");
 	printNbr(total);
 	printStr(" bytes\n");
