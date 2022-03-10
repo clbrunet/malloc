@@ -54,6 +54,9 @@ void free(void *ptr)
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return;
 	}
+	if (memory.debug_variables.is_initialized == false) {
+		setDebugVariables(&memory.debug_variables);
+	}
 	freeImplementation(ptr);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");

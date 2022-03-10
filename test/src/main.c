@@ -1,3 +1,5 @@
+#include <stdbool.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,16 +28,6 @@ int main(int argc, char **argv)
 {
 	write(STDIN_FILENO, "go\n", 3);
 	if (argc == 1) {
-		void *tiny = malloc(200);
-		void *small = malloc(2000);
-		void *large = malloc(20000);
-		show_alloc_stats();
-		free(tiny);
-		show_alloc_stats();
-		free(small);
-		free(large);
-		show_alloc_stats();
-		return 0;
 		pthread_t thread[THREAD_NUMBER];
 		for (size_t i = 0; i < THREAD_NUMBER; i++) {
     		pthread_create(&thread[i], NULL, &routine, NULL);

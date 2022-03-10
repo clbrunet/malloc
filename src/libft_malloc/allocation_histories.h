@@ -8,7 +8,7 @@ typedef enum allocation_history_action_e
 {
 	AddHistoryEntry,
 	DontAddHistoryEntry,
-}	allocation_history_action_t;
+} allocation_history_action_t;
 
 typedef struct allocation_histories_entry_s allocation_histories_entry_t;
 struct allocation_histories_entry_s

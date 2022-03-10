@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -58,12 +59,17 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 		}
 		return new;
 	}
+	// size is inferior to block->size
 	size_t unused = block->size - size;
 	block_t *next = BLOCK_NEXT(block);
 	bool is_next_in_zone = isPtrInZone(zone, next);
 	if (unused <= sizeof(block_t)
 		&& (is_next_in_zone == false || next->is_free == false)) {
 		// Too little space left to create a new block
+		if (memory.debug_variables.perturb_byte != 0) {
+			memorySet(BLOCK_START(block) + size, UCHAR_MAX - memory.debug_variables.perturb_byte,
+					unused);
+		}
 		return ptr;
 	}
 	// There is enough space in block or in next to create a new block
@@ -72,7 +78,7 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 	new->prev = block;
 	new->is_free = true;
 	if (is_next_in_zone == false || next->is_free == false) {
-		// There isn't enough space in next to create a new block but there is in block
+		// There is no space in next to create a new block but there is in block
 		new->size = unused - sizeof(block_t);
 		if (is_next_in_zone == true) {
 			next->prev = new;
@@ -130,6 +136,9 @@ void *realloc(void *ptr, size_t size)
 {
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return NULL;
+	}
+	if (memory.debug_variables.is_initialized == false) {
+		setDebugVariables(&memory.debug_variables);
 	}
 	ptr = reallocImplementation(ptr, size);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {

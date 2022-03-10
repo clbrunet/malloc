@@ -1,8 +1,11 @@
 #include <assert.h>
+#include <limits.h>
 
 #include "libft_malloc/block.h"
+#include "libft_malloc/memory.h"
 #include "libft_malloc/zones.h"
 #include "libft_malloc/utils/print.h"
+#include "libft_malloc/utils/string.h"
 
 void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 {
@@ -25,6 +28,10 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 		zone->leftmost_free_block = BLOCK_NEXT(free_block);
 	}
 	zone->block_used_count++;
+	if (memory.debug_variables.perturb_byte != 0) {
+		memorySet(BLOCK_START(free_block), memory.debug_variables.perturb_byte,
+				free_block->size);
+	}
 	return BLOCK_START(free_block);
 }
 
@@ -33,6 +40,10 @@ void freeBlock(zones_t *zone, block_t *block)
 	assert(zone != NULL);
 	assert(isPtrInZone(zone, block) == true);
 
+	if (memory.debug_variables.perturb_byte != 0) {
+		memorySet(BLOCK_START(block), UCHAR_MAX - memory.debug_variables.perturb_byte,
+				block->size);
+	}
 	block_t *next = BLOCK_NEXT(block);
 	bool is_next_in_zone = isPtrInZone(zone, next);
 	if (is_next_in_zone == true && next->is_free == true) {

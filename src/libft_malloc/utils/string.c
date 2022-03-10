@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>
 
@@ -23,6 +24,19 @@ void *memoryCopy(void *dst, const void *src, size_t n)
 		*s_dst = *s_src;
 		s_dst++;
 		s_src++;
+		n--;
+	}
+	return (dst);
+}
+
+void *memorySet(void *dst, unsigned char c, size_t n)
+{
+	assert(dst != NULL);
+
+	char *s_dst = dst;
+	while (n > 0) {
+		*s_dst = c;
+		s_dst++;
 		n--;
 	}
 	return (dst);
