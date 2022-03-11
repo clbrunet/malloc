@@ -11,6 +11,7 @@ CC := clang
 CFLAGS := -Wall -Wextra -Werror -fPIC
 CFLAGS += -I./include/ -I./src/
 CFLAGS += -g3
+CFLAGS += -DENABLE_DEBUG_VARIABLES
 # CFLAGS += -DNDEBUG
 
 SRCS := $(shell find $(SRCS_DIR) -type f -name "*.c")

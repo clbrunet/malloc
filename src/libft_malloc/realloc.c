@@ -66,10 +66,12 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 	if (unused <= sizeof(block_t)
 		&& (is_next_in_zone == false || next->is_free == false)) {
 		// Too little space left to create a new block
+#ifdef ENABLE_DEBUG_VARIABLES
 		if (memory.debug_variables.perturb_byte != 0) {
 			memorySet(BLOCK_START(block) + size, UCHAR_MAX - memory.debug_variables.perturb_byte,
 					unused);
 		}
+#endif
 		return ptr;
 	}
 	// There is enough space in block or in next to create a new block
@@ -137,9 +139,11 @@ void *realloc(void *ptr, size_t size)
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return NULL;
 	}
+#ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.is_initialized == false) {
 		setDebugVariables(&memory.debug_variables);
 	}
+#endif
 	ptr = reallocImplementation(ptr, size);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");

@@ -17,8 +17,9 @@ typedef struct memory_s
 	zones_t *smalls;
 	larges_t *larges;
 	allocation_histories_t *histories;
-
+#ifdef ENABLE_DEBUG_VARIABLES
 	debug_variables_t debug_variables;
+#endif
 } memory_t;
 
 extern memory_t memory;

@@ -18,11 +18,12 @@ memory_t memory = {
 	.smalls = NULL,
 	.larges = NULL,
 	.histories = NULL,
-
+#ifdef ENABLE_DEBUG_VARIABLES
 	.debug_variables = {
 		.is_initialized = false,
 		.perturb_byte = 0,
 	},
+#endif
 };
 
 pthread_mutex_t memory_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -101,9 +102,11 @@ void *malloc(size_t size)
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return NULL;
 	}
+#ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.is_initialized == false) {
 		setDebugVariables(&memory.debug_variables);
 	}
+#endif
 	void *ptr = mallocImplementation(size, AddHistoryEntry);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");
