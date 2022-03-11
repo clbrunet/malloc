@@ -106,6 +106,15 @@ void *malloc(size_t size)
 	if (memory.debug_variables.is_initialized == false) {
 		setDebugVariables(&memory.debug_variables);
 	}
+	memory.allocations_count++;
+	if (memory.debug_variables.fail_at != 0) {
+		if (memory.debug_variables.fail_at == memory.allocations_count) {
+			if (pthread_mutex_unlock(&memory_mutex) != 0) {
+				assert(!"pthread_mutex_unlock EPERM error");
+			}
+			return NULL;
+		}
+	}
 #endif
 	void *ptr = mallocImplementation(size, AddHistoryEntry);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {

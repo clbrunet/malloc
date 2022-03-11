@@ -20,7 +20,7 @@ static void freeZoneAllocation(zones_t **zones, zones_t *zone, void *ptr)
 		return;
 	}
 	freeBlock(zone, block);
-	if (zone->block_used_count == 0) {
+	if (zone->blocks_used_count == 0) {
 		zonesDelete(zones, zone);
 	}
 }

@@ -11,7 +11,7 @@ struct zones_s
 {
 	size_t map_size;
 	block_t *leftmost_free_block;
-	size_t block_used_count;
+	size_t blocks_used_count;
 	zones_t *next;
 };
 

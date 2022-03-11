@@ -27,7 +27,7 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 	if (free_block == zone->leftmost_free_block) {
 		zone->leftmost_free_block = BLOCK_NEXT(free_block);
 	}
-	zone->block_used_count++;
+	zone->blocks_used_count++;
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.perturb_byte != 0) {
 		memorySet(BLOCK_START(free_block), memory.debug_variables.perturb_byte,
@@ -68,7 +68,7 @@ void freeBlock(zones_t *zone, block_t *block)
 	if (block < zone->leftmost_free_block) {
 		zone->leftmost_free_block = block;
 	}
-	zone->block_used_count--;
+	zone->blocks_used_count--;
 }
 
 block_t *blocksSearchPtr(const zones_t *zone, const void *ptr)

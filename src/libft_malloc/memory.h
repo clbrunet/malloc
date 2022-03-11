@@ -19,6 +19,7 @@ typedef struct memory_s
 	allocation_histories_t *histories;
 #ifdef ENABLE_DEBUG_VARIABLES
 	debug_variables_t debug_variables;
+	size_t allocations_count;
 #endif
 } memory_t;
 

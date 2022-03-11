@@ -54,7 +54,7 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 		}
 		memoryCopy(new, ptr, min(size, block->size));
 		freeBlock(zone, block);
-		if (zone->block_used_count == 0) {
+		if (zone->blocks_used_count == 0) {
 			zonesDelete(zones, zone);
 		}
 		return new;
@@ -142,6 +142,15 @@ void *realloc(void *ptr, size_t size)
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.is_initialized == false) {
 		setDebugVariables(&memory.debug_variables);
+	}
+	memory.allocations_count++;
+	if (memory.debug_variables.fail_at != 0) {
+		if (memory.debug_variables.fail_at == memory.allocations_count) {
+			if (pthread_mutex_unlock(&memory_mutex) != 0) {
+				assert(!"pthread_mutex_unlock EPERM error");
+			}
+			return NULL;
+		}
 	}
 #endif
 	ptr = reallocImplementation(ptr, size);
