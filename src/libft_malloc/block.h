@@ -15,7 +15,7 @@ struct block_s
 };
 
 #define BLOCK_START(block) ((void *)(block) + sizeof(block_t))
-#define BLOCK_NEXT(block) ((void *)(block) + sizeof(block_t) + (block)->size)
+#define BLOCK_NEXT(block) (block_t *)((void *)(block) + sizeof(block_t) + (block)->size)
 
 void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size);
 void freeBlock(zones_t *zone, block_t *block);

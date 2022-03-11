@@ -8,6 +8,7 @@ typedef struct debug_variables_s
 	bool is_initialized;
 	unsigned char perturb_byte;
 	unsigned int fail_at;
+	unsigned int max_bytes;
 } debug_variables_t;
 
 void setDebugVariables(debug_variables_t *debug_variables);

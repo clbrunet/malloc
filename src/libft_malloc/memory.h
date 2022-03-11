@@ -20,6 +20,7 @@ typedef struct memory_s
 #ifdef ENABLE_DEBUG_VARIABLES
 	debug_variables_t debug_variables;
 	size_t allocations_count;
+	size_t used_bytes_count;
 #endif
 } memory_t;
 

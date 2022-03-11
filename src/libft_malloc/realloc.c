@@ -12,6 +12,7 @@
 #include "libft_malloc/block.h"
 #include "libft_malloc/utils/math.h"
 #include "libft_malloc/utils/string.h"
+#include "libft_malloc/utils/print.h"
 #include "libft_malloc/zones.h"
 
 static void *reallocLarge(larges_t *large, void *ptr, size_t size)
@@ -24,7 +25,13 @@ static void *reallocLarge(larges_t *large, void *ptr, size_t size)
 		return ptr;
 	}
 
+#ifdef ENABLE_DEBUG_VARIABLES
+	memory.used_bytes_count -= large->size;
+#endif
 	void *new = mallocImplementation(size, DontAddHistoryEntry);
+#ifdef ENABLE_DEBUG_VARIABLES
+	memory.used_bytes_count += large->size;
+#endif
 	if (new == NULL) {
 		return NULL;
 	}
@@ -33,33 +40,9 @@ static void *reallocLarge(larges_t *large, void *ptr, size_t size)
 	return new;
 }
 
-static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, size_t size)
+static void *smallerReallocZoneAllocation(zones_t *zone, void *ptr, size_t size,
+		block_t *block)
 {
-	assert(zone != NULL);
-	assert(ptr != NULL);
-	assert(size != 0);
-
-	block_t *block = blocksSearchPtr(zone, ptr);
-	if (block == NULL) {
-		return NULL;
-	}
-
-	if (size == block->size) {
-		return ptr;
-	}
-	if (size > block->size) {
-		void *new = mallocImplementation(size, DontAddHistoryEntry);
-		if (new == NULL) {
-			return NULL;
-		}
-		memoryCopy(new, ptr, min(size, block->size));
-		freeBlock(zone, block);
-		if (zone->blocks_used_count == 0) {
-			zonesDelete(zones, zone);
-		}
-		return new;
-	}
-	// size is inferior to block->size
 	size_t unused = block->size - size;
 	block_t *next = BLOCK_NEXT(block);
 	bool is_next_in_zone = isPtrInZone(zone, next);
@@ -75,6 +58,9 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 		return ptr;
 	}
 	// There is enough space in block or in next to create a new block
+#ifdef ENABLE_DEBUG_VARIABLES
+	memory.used_bytes_count -= block->size - size;
+#endif
 	block->size = size;
 	block_t *new = BLOCK_NEXT(block);
 	new->prev = block;
@@ -97,6 +83,61 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 	return ptr;
 }
 
+static void *largerReallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, size_t size,
+		block_t *block)
+{
+	block_t *next = BLOCK_NEXT(block);
+	if (isPtrInZone(zone, next) == true && next->is_free == true
+		&& size <= block->size + sizeof(block_t) + next->size) {
+		block->size += sizeof(block_t) + next->size;
+		block_t *next_next = BLOCK_NEXT(next);
+		if (isPtrInZone(zone, next_next) == true) {
+			next_next->prev = block;
+		}
+		if (size == block->size) {
+			return ptr;
+		}
+		return smallerReallocZoneAllocation(zone, ptr, size, block);
+	}
+
+#ifdef ENABLE_DEBUG_VARIABLES
+	memory.used_bytes_count -= block->size;
+#endif
+	void *new = mallocImplementation(size, DontAddHistoryEntry);
+#ifdef ENABLE_DEBUG_VARIABLES
+	memory.used_bytes_count += block->size;
+#endif
+	if (new == NULL) {
+		return NULL;
+	}
+	memoryCopy(new, ptr, min(size, block->size));
+	freeBlock(zone, block);
+	if (zone->used_blocks_count == 0) {
+		zonesDelete(zones, zone);
+	}
+	return new;
+}
+
+static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, size_t size)
+{
+	assert(zone != NULL);
+	assert(ptr != NULL);
+	assert(size != 0);
+
+	block_t *block = blocksSearchPtr(zone, ptr);
+	if (block == NULL) {
+		return NULL;
+	}
+
+	if (size == block->size) {
+		return ptr;
+	} else if (size < block->size) {
+		return smallerReallocZoneAllocation(zone, ptr, size, block);
+	} else {
+		return largerReallocZoneAllocation(zones, zone, ptr, size, block);
+	}
+}
+
 static void *reallocReturn(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
@@ -117,7 +158,14 @@ void *reallocImplementation(void *ptr, size_t size)
 		freeImplementation(ptr);
 		return mallocImplementation(0, AddHistoryEntry);
 	}
-
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (memory.debug_variables.fail_at != 0) {
+		if (memory.debug_variables.fail_at == memory.allocations_count) {
+			errno = ENOMEM;
+			return NULL;
+		}
+	}
+#endif
 	larges_t *large = largesSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
 		return reallocReturn(reallocLarge(large, ptr, size), size);
@@ -144,14 +192,6 @@ void *realloc(void *ptr, size_t size)
 		setDebugVariables(&memory.debug_variables);
 	}
 	memory.allocations_count++;
-	if (memory.debug_variables.fail_at != 0) {
-		if (memory.debug_variables.fail_at == memory.allocations_count) {
-			if (pthread_mutex_unlock(&memory_mutex) != 0) {
-				assert(!"pthread_mutex_unlock EPERM error");
-			}
-			return NULL;
-		}
-	}
 #endif
 	ptr = reallocImplementation(ptr, size);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {

@@ -15,24 +15,40 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 	assert(free_block->size >= size);
 	assert(size != 0);
 
-	free_block->is_free = false;
 	size_t unused = free_block->size - size;
 	if (unused > sizeof(block_t)) {
+#ifdef ENABLE_DEBUG_VARIABLES
+		if (memory.debug_variables.max_bytes != 0) {
+			if (memory.used_bytes_count + size > memory.debug_variables.max_bytes) {
+				return NULL;
+			}
+		}
+#endif
 		free_block->size = size;
 		block_t *next = BLOCK_NEXT(free_block);
 		next->prev = free_block;
 		next->is_free = true;
 		next->size = unused - sizeof(block_t);
+	} else {
+#ifdef ENABLE_DEBUG_VARIABLES
+		if (memory.debug_variables.max_bytes != 0) {
+			if (memory.used_bytes_count + free_block->size > memory.debug_variables.max_bytes) {
+				return NULL;
+			}
+		}
+#endif
 	}
+	free_block->is_free = false;
 	if (free_block == zone->leftmost_free_block) {
 		zone->leftmost_free_block = BLOCK_NEXT(free_block);
 	}
-	zone->blocks_used_count++;
+	zone->used_blocks_count++;
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.perturb_byte != 0) {
 		memorySet(BLOCK_START(free_block), memory.debug_variables.perturb_byte,
 				free_block->size);
 	}
+	memory.used_bytes_count += free_block->size;
 #endif
 	return BLOCK_START(free_block);
 }
@@ -40,13 +56,14 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 void freeBlock(zones_t *zone, block_t *block)
 {
 	assert(zone != NULL);
-	assert(isPtrInZone(zone, block) == true);
+	assert(isPtrInZone(zone, block) == true && block->is_free == false);
 
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.perturb_byte != 0) {
 		memorySet(BLOCK_START(block), UCHAR_MAX - memory.debug_variables.perturb_byte,
 				block->size);
 	}
+	memory.used_bytes_count -= block->size;
 #endif
 	block_t *next = BLOCK_NEXT(block);
 	bool is_next_in_zone = isPtrInZone(zone, next);
@@ -68,7 +85,7 @@ void freeBlock(zones_t *zone, block_t *block)
 	if (block < zone->leftmost_free_block) {
 		zone->leftmost_free_block = block;
 	}
-	zone->blocks_used_count--;
+	zone->used_blocks_count--;
 }
 
 block_t *blocksSearchPtr(const zones_t *zone, const void *ptr)

@@ -22,7 +22,11 @@ memory_t memory = {
 	.debug_variables = {
 		.is_initialized = false,
 		.perturb_byte = 0,
+		.fail_at = 0,
+		.max_bytes = 0,
 	},
+	.allocations_count = 0,
+	.used_bytes_count = 0,
 #endif
 };
 
@@ -34,13 +38,16 @@ static void *getZoneAllocation(zones_t **zones, size_t allocation_max_size, size
 	assert(allocation_max_size != 0);
 	assert(size != 0);
 
+#ifdef ENABLE_DEBUG_VARIABLES
+	zones_t **zones_backup = zones;
+#endif
+
 	while (*zones != NULL) {
 		block_t *block = (*zones)->leftmost_free_block;
 		void *zone_end = ZONE_END(*zones);
 		while ((void *)block < zone_end) {
 			if (block->is_free == true && block->size >= size) {
-				void *ptr = allocateFreeBlock(*zones, block, size);
-				return ptr;
+				return allocateFreeBlock(*zones, block, size);
 			}
 			block = BLOCK_NEXT(block);
 		}
@@ -52,6 +59,11 @@ static void *getZoneAllocation(zones_t **zones, size_t allocation_max_size, size
 		return NULL;
 	}
 	void *ptr = allocateFreeBlock(*zones, (*zones)->leftmost_free_block, size);
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (ptr == NULL) {
+		zonesDelete(zones_backup, *zones);
+	}
+#endif
 	return ptr;
 }
 
@@ -77,7 +89,14 @@ void *mallocImplementation(size_t size, allocation_history_action_t allocation_h
 	if (size == 0) {
 		return NULL;
 	}
-
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (memory.debug_variables.fail_at != 0) {
+		if (memory.debug_variables.fail_at == memory.allocations_count) {
+			errno = ENOMEM;
+			return NULL;
+		}
+	}
+#endif
 	void *ptr = NULL;
 	if (size <= TINY_MAX_SIZE) {
 		ptr = getZoneAllocation(&memory.tinies, TINY_MAX_SIZE, size);
@@ -107,14 +126,6 @@ void *malloc(size_t size)
 		setDebugVariables(&memory.debug_variables);
 	}
 	memory.allocations_count++;
-	if (memory.debug_variables.fail_at != 0) {
-		if (memory.debug_variables.fail_at == memory.allocations_count) {
-			if (pthread_mutex_unlock(&memory_mutex) != 0) {
-				assert(!"pthread_mutex_unlock EPERM error");
-			}
-			return NULL;
-		}
-	}
 #endif
 	void *ptr = mallocImplementation(size, AddHistoryEntry);
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {

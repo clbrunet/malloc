@@ -23,5 +23,12 @@ void setDebugVariables(debug_variables_t *debug_variables)
 		debug_variables->fail_at = 0;
 	}
 
+	char *max_bytes_env_value = getenv("MALLOC_MAX_BYTES_");
+	if (max_bytes_env_value != NULL) {
+		debug_variables->max_bytes = stringToULong(max_bytes_env_value);
+	} else {
+		debug_variables->max_bytes = 0;
+	}
+
 	debug_variables->is_initialized = true;
 }
