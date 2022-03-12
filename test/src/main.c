@@ -17,7 +17,7 @@ static void printUsage(const char *argv0)
 	write(STDIN_FILENO, argv0, strlen(argv0));
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
-	const char *possible_arguments = "possible arguments : 0, 1, threads, fail_at\n";
+	const char *possible_arguments = "possible arguments : 0, 1, threads, perturb, fail_at\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
 }
 
@@ -46,6 +46,21 @@ static void threadsTests()
 		pthread_join(thread[i], NULL);
 	}
 	show_alloc_mem_ex();
+}
+
+static void perturbTests()
+{
+	void *to_not_delete_zone_after_p_free = malloc(1);
+	unsigned char *p = malloc(10);
+	for (size_t i = 0; i < 10; i++) {
+		printf("i: %zu, p[i]: %d\n", i, p[i]);
+	}
+	free(p);
+	printf("\n");
+	for (size_t i = 0; i < 10; i++) {
+		printf("i: %zu, p[i]: %d\n", i, p[i]);
+	}
+	free(to_not_delete_zone_after_p_free);
 }
 
 static void fail_atTests()
@@ -78,6 +93,8 @@ int main(int argc, char **argv)
 		show_alloc_stats();
 	} else if (strcmp(argv[1], "threads") == 0) {
 		threadsTests();
+	} else if (strcmp(argv[1], "perturb") == 0) {
+		perturbTests();
 	} else if (strcmp(argv[1], "fail_at") == 0) {
 		fail_atTests();
 	} else {
