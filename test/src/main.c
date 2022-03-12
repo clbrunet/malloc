@@ -51,6 +51,8 @@ static void threadsTests()
 
 static void perturbTests()
 {
+	const char *msg = "MALLOC_PERTURB_ should be set to a value between 1 and 254\n";
+	write(STDIN_FILENO, msg, strlen(msg));
 	void *to_not_delete_zone_after_p_free = malloc(1);
 	unsigned char *p = malloc(10);
 	for (size_t i = 0; i < 10; i++) {
@@ -66,6 +68,8 @@ static void perturbTests()
 
 static void failAtTests()
 {
+	const char *msg = "MALLOC_FAIL_AT_ should be set to 2\n";
+	write(STDIN_FILENO, msg, strlen(msg));
 	void *p1 = malloc(10);
 	void *p2 = malloc(10);
 	void *p3 = malloc(10);
