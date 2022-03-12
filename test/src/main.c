@@ -17,7 +17,8 @@ static void printUsage(const char *argv0)
 	write(STDIN_FILENO, argv0, strlen(argv0));
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
-	const char *possible_arguments = "possible arguments : 0, 1, threads, perturb, fail_at\n";
+	const char *possible_arguments = "possible arguments : "
+		"0, 1, threads, perturb, fail_at, max_bytes\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
 }
 
@@ -63,7 +64,7 @@ static void perturbTests()
 	free(to_not_delete_zone_after_p_free);
 }
 
-static void fail_atTests()
+static void failAtTests()
 {
 	void *p1 = malloc(10);
 	void *p2 = malloc(10);
@@ -74,6 +75,20 @@ static void fail_atTests()
 	free(p1);
 	free(p2);
 	free(p3);
+}
+
+static void maxBytesTests()
+{
+	const char *msg = "MALLOC_MAX_BYTES_ should be set to 15\n";
+	write(STDIN_FILENO, msg, strlen(msg));
+	void *p1 = malloc(10);
+	void *p2 = malloc(10);
+	printf("p1: %p\n", p1);
+	printf("p2: %p\n", p2);
+	free(p1);
+	p2 = malloc(10);
+	printf("after free(p1) : p2: %p\n", p2);
+	free(p2);
 }
 
 int main(int argc, char **argv)
@@ -96,7 +111,9 @@ int main(int argc, char **argv)
 	} else if (strcmp(argv[1], "perturb") == 0) {
 		perturbTests();
 	} else if (strcmp(argv[1], "fail_at") == 0) {
-		fail_atTests();
+		failAtTests();
+	} else if (strcmp(argv[1], "max_bytes") == 0) {
+		maxBytesTests();
 	} else {
 		const char *wrong_argument = "wrong argument\n";
 		write(STDIN_FILENO, wrong_argument, strlen(wrong_argument));
