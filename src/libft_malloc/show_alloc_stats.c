@@ -12,8 +12,8 @@ static zones_stats_t getZonesStats(const zones_t *zones)
 	while (zones != NULL) {
 		zones_stats.total_map_size += zones->map_size;
 		block_t *block = ZONE_START(zones);
-		void *zone_end = ZONE_END(zones);
-		while ((void *)block < zone_end) {
+		block_t *zone_end = ZONE_END(zones);
+		while (block < zone_end) {
 			if (block->is_free == true) {
 				zones_stats.total_free_bytes_count += block->size;
 			}

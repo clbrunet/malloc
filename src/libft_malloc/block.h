@@ -20,5 +20,6 @@ struct block_s
 void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size);
 void freeBlock(zones_t *zone, block_t *block);
 block_t *blocksSearchPtr(const zones_t *zone, const void *ptr);
+block_t *getNextFreeBlock(const zones_t *zone, block_t *block);
 
 #endif

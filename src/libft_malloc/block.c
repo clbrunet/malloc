@@ -39,8 +39,8 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 #endif
 	}
 	free_block->is_free = false;
-	if (free_block == zone->leftmost_free_block) {
-		zone->leftmost_free_block = BLOCK_NEXT(free_block);
+	if (free_block == zone->leftmost_free_block_candidate) {
+		zone->leftmost_free_block_candidate = getNextFreeBlock(zone, free_block);
 	}
 	zone->used_blocks_count++;
 #ifdef ENABLE_DEBUG_VARIABLES
@@ -82,8 +82,8 @@ void freeBlock(zones_t *zone, block_t *block)
 	if (is_next_in_zone == true) {
 		next->prev = block;
 	}
-	if (block < zone->leftmost_free_block) {
-		zone->leftmost_free_block = block;
+	if (block < zone->leftmost_free_block_candidate) {
+		zone->leftmost_free_block_candidate = block;
 	}
 	zone->used_blocks_count--;
 }
@@ -94,12 +94,28 @@ block_t *blocksSearchPtr(const zones_t *zone, const void *ptr)
 	assert(isPtrInZone(zone, ptr) == true);
 
 	block_t *block = ZONE_START(zone);
-	void *zone_end = ZONE_END(zone);
-	while ((void *)block < zone_end) {
+	block_t *zone_end = ZONE_END(zone);
+	while (block < zone_end) {
 		if (BLOCK_START(block) == ptr) {
 			return block;
 		}
 		block = BLOCK_NEXT(block);
 	}
 	return NULL;
+}
+
+block_t *getNextFreeBlock(const zones_t *zone, block_t *block)
+{
+	assert(zone != NULL);
+	assert(isPtrInZone(zone, block) == true);
+
+	block = BLOCK_NEXT(block);
+	block_t *zone_end = ZONE_END(zone);
+	while (block < zone_end) {
+		if (block->is_free == true) {
+			return block;
+		}
+		block = BLOCK_NEXT(block);
+	}
+	return block;
 }

@@ -29,8 +29,8 @@ static size_t showZonesAllocations(const zones_t *zones, const char *name)
 		printHex((long long)zones, true);
 		printEndl();
 		block_t *block = ZONE_START(zones);
-		void *zone_end = ZONE_END(zones);
-		while ((void *)block < zone_end) {
+		block_t *zone_end = ZONE_END(zones);
+		while (block < zone_end) {
 			if (block->is_free == false) {
 				total += showAllocation((long)BLOCK_START(block), block->size);
 			}

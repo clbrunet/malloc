@@ -66,12 +66,10 @@ static void *routine()
 {
 	char *p = malloc(20);
 	char *p2 = malloc(4);
-	// p = realloc(p, 300);
 	for (size_t i = 0; i < 20; i++) {
 		p[i] = i;
 	}
 	show_alloc_mem();
-	show_alloc_stats();
 	free(p);
 	free(p2);
 	return NULL;

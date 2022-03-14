@@ -44,9 +44,9 @@ static void *getZoneAllocation(zones_t **zones, size_t allocation_max_size, size
 #endif
 
 	while (*zones != NULL) {
-		block_t *block = (*zones)->leftmost_free_block;
-		void *zone_end = ZONE_END(*zones);
-		while ((void *)block < zone_end) {
+		block_t *block = (*zones)->leftmost_free_block_candidate;
+		block_t *zone_end = ZONE_END(*zones);
+		while (block < zone_end) {
 			if (block->is_free == true && block->size >= size) {
 				return allocateFreeBlock(*zones, block, size);
 			}
@@ -59,7 +59,7 @@ static void *getZoneAllocation(zones_t **zones, size_t allocation_max_size, size
 	if (*zones == NULL) {
 		return NULL;
 	}
-	void *ptr = allocateFreeBlock(*zones, (*zones)->leftmost_free_block, size);
+	void *ptr = allocateFreeBlock(*zones, (*zones)->leftmost_free_block_candidate, size);
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (ptr == NULL) {
 		zonesDelete(zones_backup, *zones);
