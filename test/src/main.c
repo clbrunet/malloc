@@ -18,7 +18,7 @@ static void printUsage(const char *argv0)
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
 	const char *possible_arguments = "possible arguments : "
-		"0, 1, 2, threads, perturb, fail_at, max_bytes\n";
+		"0, 1, 2, threads, perturb, fail_at, max_bytes, history\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
 }
 
@@ -81,6 +81,21 @@ static void failAtTests()
 	free(p3);
 }
 
+static void historyTests()
+{
+	const char *msg = "MALLOC_ENABLE_HISTORY_ should be set to a nonzero value\n";
+	write(STDIN_FILENO, msg, strlen(msg));
+	void *p1 = malloc(10);
+	void *p2 = malloc(10);
+	p1 = realloc(p1, 15);
+	void *p3 = malloc(10);
+	show_alloc_mem_ex();
+	free(p1);
+	free(p2);
+	free(p3);
+	show_alloc_mem_ex();
+}
+
 static void maxBytesTests()
 {
 	const char *msg = "MALLOC_MAX_BYTES_ should be set to 15\n";
@@ -127,6 +142,8 @@ int main(int argc, char **argv)
 		failAtTests();
 	} else if (strcmp(argv[1], "max_bytes") == 0) {
 		maxBytesTests();
+	} else if (strcmp(argv[1], "history") == 0) {
+		historyTests();
 	} else {
 		const char *wrong_argument = "wrong argument\n";
 		write(STDIN_FILENO, wrong_argument, strlen(wrong_argument));
