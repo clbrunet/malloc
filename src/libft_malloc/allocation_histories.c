@@ -7,6 +7,8 @@
 #include "libft_malloc/utils/math.h"
 #include "libft_malloc/utils/print.h"
 
+#ifdef ENABLE_DEBUG_VARIABLES
+
 allocation_histories_t *allocationHistoriesCreate()
 {
 	size_t map_size = sizeof(allocation_histories_t) + 100 * sizeof(allocation_histories_entry_t);
@@ -63,3 +65,5 @@ bool isAllocationHistoryActionValid(allocation_history_action_t allocation_histo
 	}
 	return false;
 }
+
+#endif

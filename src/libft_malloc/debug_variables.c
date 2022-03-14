@@ -5,6 +5,8 @@
 #include "libft_malloc/utils/print.h"
 #include "libft_malloc/utils/string.h"
 
+#ifdef ENABLE_DEBUG_VARIABLES
+
 void setDebugVariables(debug_variables_t *debug_variables)
 {
 	assert(debug_variables != NULL);
@@ -44,3 +46,5 @@ void setDebugVariables(debug_variables_t *debug_variables)
 
 	debug_variables->is_initialized = true;
 }
+
+#endif
