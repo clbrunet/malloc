@@ -30,5 +30,17 @@ void setDebugVariables(debug_variables_t *debug_variables)
 		debug_variables->max_bytes = 0;
 	}
 
+
+	char *enable_history_value = getenv("MALLOC_ENABLE_HISTORY_");
+	if (enable_history_value != NULL) {
+		if (stringToULong(enable_history_value) == 0) {
+			debug_variables->enable_history = false;
+		} else {
+			debug_variables->enable_history = true;
+		}
+	} else {
+		debug_variables->enable_history = false;
+	}
+
 	debug_variables->is_initialized = true;
 }

@@ -5,6 +5,7 @@
 #include "libft_malloc/allocation_histories.h"
 #include "libft_malloc/memory.h"
 #include "libft_malloc/utils/math.h"
+#include "libft_malloc/utils/print.h"
 
 allocation_histories_t *allocationHistoriesCreate()
 {

@@ -9,6 +9,7 @@ typedef struct debug_variables_s
 	unsigned char perturb_byte;
 	unsigned int fail_at;
 	unsigned int max_bytes;
+	bool enable_history;
 } debug_variables_t;
 
 void setDebugVariables(debug_variables_t *debug_variables);

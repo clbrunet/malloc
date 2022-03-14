@@ -4,6 +4,7 @@
 #include "libft_malloc/block.h"
 #include "libft_malloc/utils/print.h"
 
+#ifdef ENABLE_DEBUG_VARIABLES
 static void showAllocationHistory(const allocation_histories_t *histories)
 {
 	printStr(FG_YELLOW "Allocation history :\n" RESET);
@@ -24,6 +25,7 @@ static void showAllocationHistory(const allocation_histories_t *histories)
 		histories = histories->next;
 	}
 }
+#endif
 
 static void showAllocationHexDump(const unsigned char *allocation_address, size_t size)
 {
@@ -122,8 +124,15 @@ void show_alloc_mem_ex()
 	if (pthread_mutex_lock(&memory_mutex) != 0) {
 		return;
 	}
-	showAllocationHistory(memory.histories);
-	printEndl();
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (memory.debug_variables.is_initialized == false) {
+		setDebugVariables(&memory.debug_variables);
+	}
+	if (memory.debug_variables.enable_history == true) {
+		showAllocationHistory(memory.histories);
+		printEndl();
+	}
+#endif
 	showCurrentAllocations();
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");

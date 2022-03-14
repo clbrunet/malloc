@@ -16,9 +16,9 @@ typedef struct memory_s
 	zones_t *tinies;
 	zones_t *smalls;
 	larges_t *larges;
-	allocation_histories_t *histories;
 #ifdef ENABLE_DEBUG_VARIABLES
 	debug_variables_t debug_variables;
+	allocation_histories_t *histories;
 	size_t allocations_count;
 	size_t used_bytes_count;
 #endif

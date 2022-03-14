@@ -17,14 +17,15 @@ memory_t memory = {
 	.tinies = NULL,
 	.smalls = NULL,
 	.larges = NULL,
-	.histories = NULL,
 #ifdef ENABLE_DEBUG_VARIABLES
 	.debug_variables = {
 		.is_initialized = false,
 		.perturb_byte = 0,
 		.fail_at = 0,
 		.max_bytes = 0,
+		.enable_history = false,
 	},
+	.histories = NULL,
 	.allocations_count = 0,
 	.used_bytes_count = 0,
 #endif
@@ -82,9 +83,15 @@ static void *getLargeAllocation(larges_t **larges, size_t size)
 	return LARGE_START(*larges);
 }
 
+#ifdef ENABLE_DEBUG_VARIABLES
 void *mallocImplementation(size_t size, allocation_history_action_t allocation_history_action)
+#else
+void *mallocImplementation(size_t size)
+#endif
 {
+#ifdef ENABLE_DEBUG_VARIABLES
 	assert(isAllocationHistoryActionValid(allocation_history_action) == true);
+#endif
 
 	if (size == 0) {
 		return NULL;
@@ -109,10 +116,14 @@ void *mallocImplementation(size_t size, allocation_history_action_t allocation_h
 		errno = ENOMEM;
 		return NULL;
 	}
-	if (allocation_history_action == AddHistoryEntry) {
-		allocationHistoriesAddEntry(&memory.histories,
-				(allocation_histories_entry_t){ .size = size, .is_a_reallocation = false });
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (memory.debug_variables.enable_history == true) {
+		if (allocation_history_action == AddHistoryEntry) {
+			allocationHistoriesAddEntry(&memory.histories,
+					(allocation_histories_entry_t){ .size = size, .is_a_reallocation = false });
+		}
 	}
+#endif
 	return ptr;
 }
 
@@ -127,7 +138,11 @@ void *malloc(size_t size)
 	}
 	memory.allocations_count++;
 #endif
+#ifdef ENABLE_DEBUG_VARIABLES
 	void *ptr = mallocImplementation(size, AddHistoryEntry);
+#else
+	void *ptr = mallocImplementation(size);
+#endif
 	if (pthread_mutex_unlock(&memory_mutex) != 0) {
 		assert(!"pthread_mutex_unlock EPERM error");
 	}

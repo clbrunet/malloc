@@ -28,7 +28,11 @@ static void *reallocLarge(larges_t *large, void *ptr, size_t size)
 #ifdef ENABLE_DEBUG_VARIABLES
 	memory.used_bytes_count -= large->size;
 #endif
+#ifdef ENABLE_DEBUG_VARIABLES
 	void *new = mallocImplementation(size, DontAddHistoryEntry);
+#else
+	void *new = mallocImplementation(size);
+#endif
 #ifdef ENABLE_DEBUG_VARIABLES
 	memory.used_bytes_count += large->size;
 #endif
@@ -103,7 +107,11 @@ static void *largerReallocZoneAllocation(zones_t **zones, zones_t *zone, void *p
 #ifdef ENABLE_DEBUG_VARIABLES
 	memory.used_bytes_count -= block->size;
 #endif
+#ifdef ENABLE_DEBUG_VARIABLES
 	void *new = mallocImplementation(size, DontAddHistoryEntry);
+#else
+	void *new = mallocImplementation(size);
+#endif
 #ifdef ENABLE_DEBUG_VARIABLES
 	memory.used_bytes_count += block->size;
 #endif
@@ -138,25 +146,41 @@ static void *reallocZoneAllocation(zones_t **zones, zones_t *zone, void *ptr, si
 	}
 }
 
+#ifdef ENABLE_DEBUG_VARIABLES
 static void *reallocReturn(void *ptr, size_t size)
+#else
+static void *reallocReturn(void *ptr)
+#endif
 {
 	if (ptr == NULL) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	allocationHistoriesAddEntry(&memory.histories,
-			(allocation_histories_entry_t){ .size = size, .is_a_reallocation = true });
+#ifdef ENABLE_DEBUG_VARIABLES
+	if (memory.debug_variables.enable_history == true) {
+		allocationHistoriesAddEntry(&memory.histories,
+				(allocation_histories_entry_t){ .size = size, .is_a_reallocation = true });
+	}
+#endif
 	return ptr;
 }
 
 void *reallocImplementation(void *ptr, size_t size)
 {
 	if (ptr == NULL) {
+#ifdef ENABLE_DEBUG_VARIABLES
 		return mallocImplementation(size, AddHistoryEntry);
+#else
+		return mallocImplementation(size);
+#endif
 	}
 	if (size == 0) {
 		freeImplementation(ptr);
+#ifdef ENABLE_DEBUG_VARIABLES
 		return mallocImplementation(0, AddHistoryEntry);
+#else
+		return mallocImplementation(0);
+#endif
 	}
 #ifdef ENABLE_DEBUG_VARIABLES
 	if (memory.debug_variables.fail_at != 0) {
@@ -168,16 +192,28 @@ void *reallocImplementation(void *ptr, size_t size)
 #endif
 	larges_t *large = largesSearchPtr(memory.larges, ptr);
 	if (large != NULL) {
+#ifdef ENABLE_DEBUG_VARIABLES
 		return reallocReturn(reallocLarge(large, ptr, size), size);
+#else
+		return reallocReturn(reallocLarge(large, ptr, size));
+#endif
 	}
 	zones_t *zone;
 	zone = zonesSearchPtr(memory.tinies, ptr);
 	if (zone != NULL) {
+#ifdef ENABLE_DEBUG_VARIABLES
 		return reallocReturn(reallocZoneAllocation(&memory.tinies, zone, ptr, size), size);
+#else
+		return reallocReturn(reallocZoneAllocation(&memory.tinies, zone, ptr, size));
+#endif
 	}
 	zone = zonesSearchPtr(memory.smalls, ptr);
 	if (zone != NULL) {
+#ifdef ENABLE_DEBUG_VARIABLES
 		return reallocReturn(reallocZoneAllocation(&memory.smalls, zone, ptr, size), size);
+#else
+		return reallocReturn(reallocZoneAllocation(&memory.smalls, zone, ptr, size));
+#endif
 	}
 	return NULL;
 }
