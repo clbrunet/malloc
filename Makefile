@@ -2,6 +2,8 @@ NAME := libft_malloc.so
 SRCS_DIR := ./src
 BUILD_DIR := ./build
 
+ENABLE_DEBUG_VARIABLES := 0
+
 ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
@@ -11,7 +13,9 @@ CC := clang
 CFLAGS := -Wall -Wextra -Werror -fPIC
 CFLAGS += -I./include/ -I./src/
 # CFLAGS += -g3
-CFLAGS += -DENABLE_DEBUG_VARIABLES
+ifneq ($(ENABLE_DEBUG_VARIABLES),0)
+	CFLAGS += -DENABLE_DEBUG_VARIABLES
+endif
 CFLAGS += -DNDEBUG
 
 SRCS := $(shell find $(SRCS_DIR) -type f -name "*.c")
