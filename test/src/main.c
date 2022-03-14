@@ -18,7 +18,7 @@ static void printUsage(const char *argv0)
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
 	const char *possible_arguments = "possible arguments : "
-		"0, 1, threads, perturb, fail_at, max_bytes\n";
+		"0, 1, 2, threads, perturb, fail_at, max_bytes\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
 }
 
@@ -97,7 +97,7 @@ static void maxBytesTests()
 
 int main(int argc, char **argv)
 {
-	write(STDIN_FILENO, "go\n", 3);
+	write(STDIN_FILENO, "GO\n", 3);
 	if (argc == 1) {
 		printUsage(argv[0]);
 		return 0;
@@ -108,6 +108,15 @@ int main(int argc, char **argv)
 	} else if (strcmp(argv[1], "1") == 0) {
 		for (size_t i = 0; i < 1024; i++) {
 			malloc(1024);
+		}
+		show_alloc_stats();
+	} else if (strcmp(argv[1], "2") == 0) {
+		char *ptrs[1024];
+		for (size_t i = 0; i < 1024; i++) {
+			ptrs[i] = malloc(1024);
+		}
+		for (size_t i = 0; i < 1024; i++) {
+			free(ptrs[i]);
 		}
 		show_alloc_stats();
 	} else if (strcmp(argv[1], "threads") == 0) {

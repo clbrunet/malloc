@@ -47,7 +47,6 @@ larges_t *largesSearchPtr(larges_t *larges, void *ptr)
 	}
 	return NULL;
 }
-
 void largesDelete(larges_t **larges, larges_t *to_delete)
 {
 	assert(larges != NULL);
