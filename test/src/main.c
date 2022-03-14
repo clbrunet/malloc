@@ -18,8 +18,28 @@ static void printUsage(const char *argv0)
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
 	const char *possible_arguments = "possible arguments : "
-		"0, 1, 2, threads, perturb, fail_at, max_bytes, history\n";
+		"nothing, malloc, free, threads, perturb, fail_at, max_bytes, history\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
+}
+
+static void mallocTests()
+{
+	for (size_t i = 0; i < 1024; i++) {
+		malloc(1024);
+	}
+	show_alloc_stats();
+}
+
+static void freeTests()
+{
+	char *ptrs[1024];
+	for (size_t i = 0; i < 1024; i++) {
+		ptrs[i] = malloc(1024);
+	}
+	for (size_t i = 0; i < 1024; i++) {
+		free(ptrs[i]);
+	}
+	show_alloc_stats();
 }
 
 static void *routine()
@@ -118,22 +138,11 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (strcmp(argv[1], "0") == 0) {
-		show_alloc_stats();
-	} else if (strcmp(argv[1], "1") == 0) {
-		for (size_t i = 0; i < 1024; i++) {
-			malloc(1024);
-		}
-		show_alloc_stats();
-	} else if (strcmp(argv[1], "2") == 0) {
-		char *ptrs[1024];
-		for (size_t i = 0; i < 1024; i++) {
-			ptrs[i] = malloc(1024);
-		}
-		for (size_t i = 0; i < 1024; i++) {
-			free(ptrs[i]);
-		}
-		show_alloc_stats();
+	if (strcmp(argv[1], "nothing") == 0) {
+	} else if (strcmp(argv[1], "malloc") == 0) {
+		mallocTests();
+	} else if (strcmp(argv[1], "free") == 0) {
+		freeTests();
 	} else if (strcmp(argv[1], "threads") == 0) {
 		threadsTests();
 	} else if (strcmp(argv[1], "perturb") == 0) {
