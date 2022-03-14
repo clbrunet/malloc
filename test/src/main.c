@@ -18,7 +18,7 @@ static void printUsage(const char *argv0)
 	const char *argument = " argument\n";
 	write(STDIN_FILENO, argument, strlen(argument));
 	const char *possible_arguments = "possible arguments : "
-		"nothing, malloc, free, threads, perturb, fail_at, max_bytes, history\n";
+		"nothing, malloc, free, realloc, threads, perturb, fail_at, max_bytes, history\n";
 	write(STDIN_FILENO, possible_arguments, strlen(possible_arguments));
 }
 
@@ -40,6 +40,26 @@ static void freeTests()
 		free(ptrs[i]);
 	}
 	show_alloc_stats();
+}
+
+static void reallocTests()
+{
+	void *first = malloc(1);
+	show_alloc_mem();
+	void *first_realloc = realloc(first, 2);
+	write(STDIN_FILENO, "\n", 1);
+	show_alloc_mem();
+	void *second = malloc(1);
+	write(STDIN_FILENO, "\n", 1);
+	show_alloc_mem();
+	void *first_realloc_realloc = realloc(first_realloc, 3);
+	write(STDIN_FILENO, "\n", 1);
+	show_alloc_mem();
+	write(STDIN_FILENO, "\n", 1);
+	printf("first: %p\n", first);
+	printf("first_realloc: %p\n", first_realloc);
+	printf("second: %p\n", second);
+	printf("first_realloc_realloc: %p\n", first_realloc_realloc);
 }
 
 static void *routine()
@@ -143,6 +163,8 @@ int main(int argc, char **argv)
 		mallocTests();
 	} else if (strcmp(argv[1], "free") == 0) {
 		freeTests();
+	} else if (strcmp(argv[1], "realloc") == 0) {
+		reallocTests();
 	} else if (strcmp(argv[1], "threads") == 0) {
 		threadsTests();
 	} else if (strcmp(argv[1], "perturb") == 0) {
