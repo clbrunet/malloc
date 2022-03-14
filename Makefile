@@ -10,9 +10,9 @@ NAME_HOSTTYPE := $(NAME:.so=_$(HOSTTYPE).so)
 CC := clang
 CFLAGS := -Wall -Wextra -Werror -fPIC
 CFLAGS += -I./include/ -I./src/
-CFLAGS += -g3
+# CFLAGS += -g3
 CFLAGS += -DENABLE_DEBUG_VARIABLES
-# CFLAGS += -DNDEBUG
+CFLAGS += -DNDEBUG
 
 SRCS := $(shell find $(SRCS_DIR) -type f -name "*.c")
 OBJS := $(SRCS:$(SRCS_DIR)/%.c=$(BUILD_DIR)/%.o)
