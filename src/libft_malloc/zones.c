@@ -22,10 +22,10 @@ zones_t *zonesCreate(size_t allocation_max_size)
 	}
 
 	zones->map_size = map_size;
-	zones->leftmost_free_block_candidate = ZONE_START(zones);
-	zones->leftmost_free_block_candidate->prev = NULL;
-	zones->leftmost_free_block_candidate->is_free = true;
-	zones->leftmost_free_block_candidate->size = map_size - (sizeof(zones_t) + sizeof(block_t));
+	zones->leftmost_free_block = ZONE_START(zones);
+	zones->leftmost_free_block->prev = NULL;
+	zones->leftmost_free_block->is_free = true;
+	zones->leftmost_free_block->size = map_size - (sizeof(zones_t) + sizeof(block_t));
 	zones->next = NULL;
 	return zones;
 }
@@ -92,7 +92,7 @@ void showZone(zones_t *zone, const char *name)
 		} else {
 			printStr(" used bytes");
 		}
-		if (zone->leftmost_free_block_candidate == block) {
+		if (zone->leftmost_free_block == block) {
 			printStr(" (leftmost free block)");
 		}
 		printStr(" }");

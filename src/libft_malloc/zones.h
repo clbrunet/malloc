@@ -10,7 +10,7 @@ typedef struct zones_s zones_t;
 struct zones_s
 {
 	size_t map_size;
-	block_t *leftmost_free_block_candidate;
+	block_t *leftmost_free_block;
 	size_t used_blocks_count;
 	zones_t *next;
 };

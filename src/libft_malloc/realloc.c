@@ -69,8 +69,8 @@ static void *smallerReallocZoneAllocation(zones_t *zone, void *ptr, size_t size,
 	block_t *new = BLOCK_NEXT(block);
 	new->prev = block;
 	new->is_free = true;
-	if (new < zone->leftmost_free_block_candidate) {
-		zone->leftmost_free_block_candidate = new;
+	if (new < zone->leftmost_free_block) {
+		zone->leftmost_free_block = new;
 	}
 	if (is_next_in_zone == false || next->is_free == false) {
 		// There is no space in next to create a new block but there is in block
@@ -98,8 +98,8 @@ static void *largerReallocZoneAllocation(zones_t **zones, zones_t *zone, void *p
 		&& size <= block->size + sizeof(block_t) + next->size) {
 		block->size += sizeof(block_t) + next->size;
 		block_t *next_next = BLOCK_NEXT(next);
-		if (next == zone->leftmost_free_block_candidate) {
-			zone->leftmost_free_block_candidate = getNextFreeBlock(zone, next);
+		if (next == zone->leftmost_free_block) {
+			zone->leftmost_free_block = getNextFreeBlock(zone, next);
 		}
 		if (isPtrInZone(zone, next_next) == true) {
 			next_next->prev = block;

@@ -39,8 +39,8 @@ void *allocateFreeBlock(zones_t *zone, block_t *free_block, size_t size)
 #endif
 	}
 	free_block->is_free = false;
-	if (free_block == zone->leftmost_free_block_candidate) {
-		zone->leftmost_free_block_candidate = getNextFreeBlock(zone, free_block);
+	if (free_block == zone->leftmost_free_block) {
+		zone->leftmost_free_block = getNextFreeBlock(zone, free_block);
 	}
 	zone->used_blocks_count++;
 #ifdef ENABLE_DEBUG_VARIABLES
@@ -82,8 +82,8 @@ void freeBlock(zones_t *zone, block_t *block)
 	if (is_next_in_zone == true) {
 		next->prev = block;
 	}
-	if (block < zone->leftmost_free_block_candidate) {
-		zone->leftmost_free_block_candidate = block;
+	if (block < zone->leftmost_free_block) {
+		zone->leftmost_free_block = block;
 	}
 	zone->used_blocks_count--;
 }
