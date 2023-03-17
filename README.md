@@ -1,4 +1,4 @@
-# 42_malloc
+# malloc
 Implementation of malloc, realloc and free functions using mmap
 
 ## Usage
